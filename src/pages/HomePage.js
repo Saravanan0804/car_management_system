@@ -5,7 +5,7 @@ import CarList from '../components/CarList';
 const HomePage = () => {
   return (
     <Container>
-      <Typography variant="h4" align="center" gutterBottom>
+      <Typography marginTop={2} variant="h4" align="center" gutterBottom>
         Car Details
       </Typography>
       <CarList />

@@ -18,7 +18,8 @@ const CarForm = () => {
     km: "",
     date: "",
     vehicleNumber: "",
-    issues: [{ description: "", amount: "" }],
+    invoiceNumber: "",
+    issues: [{ description: "", qty: "", rate: "", amount: "" }],
   });
   const navigate = useNavigate();
   const { id } = useParams();
@@ -34,6 +35,13 @@ const CarForm = () => {
       return () => {
         carRef.off();
       };
+    } else {
+      const carsRef = firebase.database().ref("cars");
+      carsRef.once("value", (snapshot) => {
+        const cars = snapshot.val();
+        const newInvoiceNumber = `SM${Object.keys(cars || {}).length + 1}`;
+        setCar((prevCar) => ({ ...prevCar, invoiceNumber: newInvoiceNumber }));
+      });
     }
   }, [id]);
 
@@ -45,7 +53,18 @@ const CarForm = () => {
   const handleIssueChange = (index, e) => {
     const { name, value } = e.target;
     const updatedIssues = car.issues.map((issue, i) =>
-      i === index ? { ...issue, [name]: value } : issue
+      i === index
+        ? {
+            ...issue,
+            [name]: value,
+            amount:
+              name === "qty" || name === "rate"
+                ? name === "qty"
+                  ? value * issue.rate
+                  : value * issue.qty
+                : issue.amount,
+          }
+        : issue
     );
     setCar((prevCar) => ({ ...prevCar, issues: updatedIssues }));
   };
@@ -53,7 +72,10 @@ const CarForm = () => {
   const handleAddIssue = () => {
     setCar((prevCar) => ({
       ...prevCar,
-      issues: [...prevCar.issues, { description: "", amount: "" }],
+      issues: [
+        ...prevCar.issues,
+        { description: "", qty: "", rate: "", amount: "" },
+      ],
     }));
   };
 
@@ -75,19 +97,24 @@ const CarForm = () => {
     }
   };
 
+  const handleCancel = () => {
+    navigate("/");
+  };
+
   return (
     <Container>
       <form onSubmit={handleSubmit}>
         <Grid container spacing={2}>
-          <Grid item xs={12}>
+          <Grid item xs={12} marginTop={2}>
             <Typography variant="h4" align="center">
-              {id ? "Update Car" : "Add Car"}
+              {id ? "Update Car Details" : "Add Car Details"}
             </Typography>
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField
               label="Customer Name"
               name="customerName"
+              required
               value={car.customerName}
               onChange={handleChange}
               fullWidth
@@ -99,17 +126,19 @@ const CarForm = () => {
               label="KM"
               name="km"
               value={car.km}
+              required
+              type="number"
               onChange={handleChange}
               fullWidth
               margin="normal"
             />
           </Grid>
-
           <Grid item xs={12} sm={6}>
             <TextField
               label="Date"
               name="date"
               type="date"
+              required
               value={car.date}
               onChange={handleChange}
               fullWidth
@@ -123,15 +152,31 @@ const CarForm = () => {
             <TextField
               label="Vehicle Number"
               name="vehicleNumber"
+              required
               value={car.vehicleNumber}
               onChange={handleChange}
               fullWidth
               margin="normal"
             />
           </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Invoice Number"
+              name="invoiceNumber"
+              value={car.invoiceNumber}
+              onChange={handleChange}
+              fullWidth
+              margin="normal"
+              InputProps={{
+                readOnly: true,
+              }}
+            />
+          </Grid>
+        </Grid>
+        <Grid container spacing={2} display={"flex"}>
           {car.issues.map((issue, index) => (
             <React.Fragment key={index}>
-              <Grid item xs={12} sm={6}>
+              <Grid item xs={12} sm={4}>
                 <TextField
                   label={`Issue ${index + 1} Description`}
                   name="description"
@@ -141,7 +186,29 @@ const CarForm = () => {
                   margin="normal"
                 />
               </Grid>
-              <Grid item xs={12} sm={4}>
+              <Grid item xs={12} sm={2}>
+                <TextField
+                  label={`Issue ${index + 1} Quantity`}
+                  name="qty"
+                  type="number"
+                  value={issue.qty}
+                  onChange={(e) => handleIssueChange(index, e)}
+                  fullWidth
+                  margin="normal"
+                />
+              </Grid>
+              <Grid item xs={12} sm={2}>
+                <TextField
+                  label={`Issue ${index + 1} Rate`}
+                  name="rate"
+                  type="number"
+                  value={issue.rate}
+                  onChange={(e) => handleIssueChange(index, e)}
+                  fullWidth
+                  margin="normal"
+                />
+              </Grid>
+              <Grid item xs={12} sm={2}>
                 <TextField
                   label={`Issue ${index + 1} Amount`}
                   name="amount"
@@ -150,31 +217,50 @@ const CarForm = () => {
                   onChange={(e) => handleIssueChange(index, e)}
                   fullWidth
                   margin="normal"
+                  InputProps={{
+                    readOnly: true,
+                  }}
                 />
               </Grid>
-              <Grid item xs={12} sm={2}>
+              <Grid item xs={12} sm={2} marginTop={3}>
                 <IconButton
                   aria-label="delete"
                   onClick={() => handleRemoveIssue(index)}
+                  style={{ color: 'red' }}
                 >
                   <DeleteIcon />
                 </IconButton>
               </Grid>
             </React.Fragment>
           ))}
-          <Grid item xs={12}>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleAddIssue}
-              startIcon={<AddIcon />}
-            >
-              Add Issue
+        </Grid>
+        <Grid item xs={12} marginTop={2}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleAddIssue}
+            startIcon={<AddIcon />}
+          >
+            Add Issue
+          </Button>
+        </Grid>
+        <Grid
+          container
+          item
+          xs={12}
+          marginTop={3}
+          marginBottom={3}
+          justifyContent="right"
+          spacing={2}
+        >
+          <Grid item>
+            <Button type="submit" variant="contained" color="primary">
+              {id ? "Update Car" : "Add Car"}
             </Button>
           </Grid>
-          <Grid item xs={12}>
-            <Button type="submit" variant="contained" color="primary" fullWidth>
-              {id ? "Update Car" : "Add Car"}
+          <Grid item>
+            <Button variant="contained" color="primary" onClick={handleCancel}>
+              Cancel
             </Button>
           </Grid>
         </Grid>
