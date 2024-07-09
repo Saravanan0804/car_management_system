@@ -20,8 +20,11 @@ import firebase from "../firebase";
 import { useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import logoImage from "../assets/logo.jpg";
 import signatureImage from "../assets/logo.jpg";
+import ConfirmationDialog from "./DialogBox";
 
 const CarList = () => {
   const [cars, setCars] = useState([]);
@@ -29,6 +32,8 @@ const CarList = () => {
   const [filter, setFilter] = useState("");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [carToDelete, setCarToDelete] = useState(null);
   const navigate = useNavigate();
 
   const fetchCars = () => {
@@ -41,6 +46,26 @@ const CarList = () => {
       }
       setCars(carList);
       setFilteredCars(carList);
+
+      // Check for bills with balance due after 14 days
+      const reminders = carList.reduce((acc, car) => {
+        const daysDifference = calculateDaysDifference(car.date);
+        if (car.balance > 0 && daysDifference > 14) {
+          acc.push(car.invoiceNumber);
+        }
+        return acc;
+      }, []);
+
+      if (reminders.length > 0) {
+        const reminderMessage = `You Need To Buy Balance Bill ${reminders.join(
+          ", "
+        )}`;
+        toast.warning(reminderMessage, {
+          autoClose: 5000,
+          style: { textAlign: "center" },
+          position: "top-center",
+        });
+      }
     });
   };
 
@@ -55,7 +80,9 @@ const CarList = () => {
 
   const handleDelete = (id) => {
     const carRef = firebase.database().ref("cars").child(id);
-    carRef.remove().then(() => fetchCars());
+    carRef.remove().then(() => {
+      fetchCars();
+    });
   };
 
   const handleEdit = (id) => {
@@ -67,12 +94,12 @@ const CarList = () => {
 
     const addLogo = () => {
       const logo = new Image();
-      logo.src = logoImage; 
-      doc.addImage(logo, "JPEG", 10, 10, 50, 30); 
+      logo.src = logoImage;
+      doc.addImage(logo, "JPEG", 10, 10, 50, 30);
     };
 
     const header = () => {
-      addLogo(); 
+      addLogo();
       doc.setFontSize(18);
       doc.setFont("helvetica", "bold");
       doc.text("Subasthika Motors", 70, 16);
@@ -81,18 +108,19 @@ const CarList = () => {
       doc.text("Mudamavadi Junction Nallur, Jaffna", 70, 24);
       doc.text("Contact: 0777111872 & 0766166601", 70, 32);
       doc.text("Gmail: abeesthurai97@gmail.com", 70, 40);
-      doc.line(10, 50, 200, 50); 
+      doc.line(10, 50, 200, 50);
     };
 
     const content = () => {
       doc.setFontSize(12);
       doc.setFont("helvetica", "bold");
-      doc.text(`Customer Name: ${car.customerName}`, 10, 70);
-      doc.text(`Vehicle Number: ${car.vehicleNumber}`, 10, 80);
-      doc.text(`KM: ${car.km}`, 10, 90);
+      doc.text(`Customer Name: ${car.customerName}`, 10, 60);
+      doc.text(`Vehicle Number: ${car.vehicleNumber}`, 10, 70);
+      doc.text(`KM: ${car.km}`, 10, 80);
+      doc.text(`Contact No.: ${car.customerPhone}`, 10, 90);
 
-      doc.text(`Invoice Number: ${car.invoiceNumber}`, 140, 70);
-      doc.text(`Date: ${car.date}`, 140, 80);
+      doc.text(`${car.invoiceNumber}`, 140, 60);
+      doc.text(`${car.date}`, 140, 70);
       doc.setFont("helvetica", "normal");
 
       const issueRows = car.issues.map((issue, index) => [
@@ -121,11 +149,11 @@ const CarList = () => {
 
     const addSignature = () => {
       const signature = new Image();
-      signature.src = signatureImage; 
-      doc.addImage(signature, "JPEG", 145, 200, 50, 20); 
+      signature.src = signatureImage;
+      doc.addImage(signature, "JPEG", 145, 200, 50, 20);
       doc.setFontSize(12);
       doc.text("A.Abeeskar", 155, 230);
-      doc.setFont("helvetica", "bold"); 
+      doc.setFont("helvetica", "bold");
       doc.text("Signature", 155, 235);
       doc.setFont("helvetica", "normal");
     };
@@ -157,8 +185,27 @@ const CarList = () => {
     setPage(0);
   };
 
+  const calculateDaysDifference = (date) => {
+    const currentDate = new Date();
+    const carDate = new Date(date);
+    const differenceInTime = currentDate.getTime() - carDate.getTime();
+    const differenceInDays = differenceInTime / (1000 * 3600 * 24);
+    return differenceInDays;
+  };
+
+  const openDeleteDialog = (id) => {
+    setCarToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const closeDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+    setCarToDelete(null);
+  };
+
   return (
     <Container>
+      <ToastContainer />
       <Grid
         container
         spacing={2}
@@ -180,7 +227,7 @@ const CarList = () => {
             color="primary"
             onClick={() => navigate("/add-car")}
           >
-            Add Car
+            Add Vehicle
           </Button>
         </Grid>
       </Grid>
@@ -188,12 +235,13 @@ const CarList = () => {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Invoice Number</TableCell>
+              <TableCell>Invoice No.</TableCell>
               <TableCell>Customer Name</TableCell>
-              <TableCell>KM</TableCell>
+              <TableCell>Contact No.</TableCell>
               <TableCell>Date</TableCell>
-              <TableCell>Vehicle Number</TableCell>
-              <TableCell>Total Amount</TableCell>
+              <TableCell>Vehicle No.</TableCell>
+              <TableCell>Total</TableCell>
+              <TableCell>Balance</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -209,10 +257,11 @@ const CarList = () => {
                   <TableRow key={car.key}>
                     <TableCell>{car.invoiceNumber}</TableCell>
                     <TableCell>{car.customerName}</TableCell>
-                    <TableCell>{car.km}</TableCell>
+                    <TableCell>{car.customerPhone}</TableCell>
                     <TableCell>{car.date}</TableCell>
                     <TableCell>{car.vehicleNumber}</TableCell>
                     <TableCell>{totalAmount}</TableCell>
+                    <TableCell>{car.balance}</TableCell>
                     <TableCell>
                       <IconButton
                         style={{ color: "blue" }}
@@ -222,7 +271,7 @@ const CarList = () => {
                       </IconButton>
                       <IconButton
                         style={{ color: "red" }}
-                        onClick={() => handleDelete(car.key)}
+                        onClick={() => openDeleteDialog(car.key)}
                       >
                         <DeleteIcon />
                       </IconButton>
@@ -247,6 +296,12 @@ const CarList = () => {
         page={page}
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
+      />
+      <ConfirmationDialog
+        open={deleteDialogOpen}
+        onClose={closeDeleteDialog}
+        onConfirm={handleDelete}
+        carId={carToDelete}
       />
     </Container>
   );

@@ -30,12 +30,12 @@ const Header = () => {
         <Grid container spacing={2}>
           <Grid item>
             <Link component={RouterLink} to="/add-car" underline="none">
-              Add Car
+              Add Vehicle
             </Link>
           </Grid>
           <Grid item>
             <Link component={RouterLink} to="/" underline="none">
-              Car List
+              Vehicle List
             </Link>
           </Grid>
         </Grid>

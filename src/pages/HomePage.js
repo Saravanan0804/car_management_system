@@ -6,7 +6,7 @@ const HomePage = () => {
   return (
     <Container>
       <Typography marginTop={2} variant="h4" align="center" gutterBottom>
-        Car Details
+        Vehicle Details
       </Typography>
       <CarList />
     </Container>

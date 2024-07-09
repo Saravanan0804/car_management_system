@@ -15,10 +15,14 @@ import AddIcon from "@mui/icons-material/Add";
 const CarForm = () => {
   const [car, setCar] = useState({
     customerName: "",
+    customerPhone: "",
     km: "",
     date: "",
     vehicleNumber: "",
     invoiceNumber: "",
+    purchaseAmount: "",
+    totalAmount: "",
+    balance: "",
     issues: [{ description: "", qty: "", rate: "", amount: "" }],
   });
   const navigate = useNavigate();
@@ -47,7 +51,18 @@ const CarForm = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setCar((prevCar) => ({ ...prevCar, [name]: value }));
+    setCar((prevCar) => {
+      const updatedCar = { ...prevCar, [name]: value };
+
+      if (name === "purchaseAmount") {
+        updatedCar.balance = calculateBalance(
+          updatedCar.totalAmount,
+          parseFloat(value)
+        );
+      }
+
+      return updatedCar;
+    });
   };
 
   const handleIssueChange = (index, e) => {
@@ -66,7 +81,24 @@ const CarForm = () => {
           }
         : issue
     );
-    setCar((prevCar) => ({ ...prevCar, issues: updatedIssues }));
+
+    setCar((prevCar) => {
+      const totalAmount = updatedIssues.reduce(
+        (total, issue) => total + parseFloat(issue.amount || 0),
+        0
+      );
+      const updatedCar = {
+        ...prevCar,
+        issues: updatedIssues,
+        totalAmount: totalAmount,
+        balance: calculateBalance(
+          totalAmount,
+          parseFloat(prevCar.purchaseAmount)
+        ),
+      };
+
+      return updatedCar;
+    });
   };
 
   const handleAddIssue = () => {
@@ -81,7 +113,23 @@ const CarForm = () => {
 
   const handleRemoveIssue = (index) => {
     const updatedIssues = car.issues.filter((_, i) => i !== index);
-    setCar((prevCar) => ({ ...prevCar, issues: updatedIssues }));
+    setCar((prevCar) => {
+      const totalAmount = updatedIssues.reduce(
+        (total, issue) => total + parseFloat(issue.amount || 0),
+        0
+      );
+      const updatedCar = {
+        ...prevCar,
+        issues: updatedIssues,
+        totalAmount: totalAmount,
+        balance: calculateBalance(
+          totalAmount,
+          parseFloat(prevCar.purchaseAmount)
+        ),
+      };
+
+      return updatedCar;
+    });
   };
 
   const handleSubmit = (e) => {
@@ -101,13 +149,17 @@ const CarForm = () => {
     navigate("/");
   };
 
+  const calculateBalance = (totalAmount, purchaseAmount) => {
+    return totalAmount - (purchaseAmount || 0);
+  };
+
   return (
     <Container>
       <form onSubmit={handleSubmit}>
         <Grid container spacing={2}>
           <Grid item xs={12} marginTop={2}>
             <Typography variant="h4" align="center">
-              {id ? "Update Car Details" : "Add Car Details"}
+              {id ? "Update Vehicle Details" : "Add Vehicle Details"}
             </Typography>
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -116,6 +168,16 @@ const CarForm = () => {
               name="customerName"
               required
               value={car.customerName}
+              onChange={handleChange}
+              fullWidth
+              margin="normal"
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Customer Phone"
+              name="customerPhone"
+              value={car.customerPhone}
               onChange={handleChange}
               fullWidth
               margin="normal"
@@ -226,7 +288,7 @@ const CarForm = () => {
                 <IconButton
                   aria-label="delete"
                   onClick={() => handleRemoveIssue(index)}
-                  style={{ color: 'red' }}
+                  style={{ color: "red" }}
                 >
                   <DeleteIcon />
                 </IconButton>
@@ -244,6 +306,45 @@ const CarForm = () => {
             Add Issue
           </Button>
         </Grid>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={4}>
+            <TextField
+              label="Total Amount"
+              name="totalAmount"
+              type="number"
+              value={car.totalAmount}
+              InputProps={{
+                readOnly: true,
+              }}
+              fullWidth
+              margin="normal"
+            />
+          </Grid>
+          <Grid item xs={12} sm={4}>
+            <TextField
+              label="Purchase Amount"
+              name="purchaseAmount"
+              type="number"
+              value={car.purchaseAmount}
+              onChange={handleChange}
+              fullWidth
+              margin="normal"
+            />
+          </Grid>
+          <Grid item xs={12} sm={4}>
+            <TextField
+              label="Balance"
+              name="balance"
+              type="number"
+              value={car.balance}
+              InputProps={{
+                readOnly: true,
+              }}
+              fullWidth
+              margin="normal"
+            />
+          </Grid>
+        </Grid>
         <Grid
           container
           item
@@ -255,7 +356,7 @@ const CarForm = () => {
         >
           <Grid item>
             <Button type="submit" variant="contained" color="primary">
-              {id ? "Update Car" : "Add Car"}
+              {id ? "Update Vehicle" : "Add Vehicle"}
             </Button>
           </Grid>
           <Grid item>
