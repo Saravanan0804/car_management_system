@@ -76,6 +76,7 @@ const CarList = () => {
       const carsRef = firebase.database().ref("cars");
       carsRef.off();
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleDelete = (id) => {
