@@ -24,7 +24,7 @@ import "jspdf-autotable";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import logoImage from "../assets/logo.jpg";
-import signatureImage from "../assets/logo.jpg";
+import signatureImage from "../assets/sign.jpg";
 import ConfirmationDialog from "./DialogBox";
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
@@ -118,12 +118,19 @@ const CarList = () => {
     const content = () => {
       doc.setFontSize(12);
       doc.setFont("helvetica", "bold");
-      doc.text(`Customer Name: ${car.customerName}`, 10, 60);
-      doc.text(`Vehicle Number: ${car.vehicleNumber}`, 10, 70);
-      doc.text(`KM: ${car.km}`, 10, 80);
-      doc.text(`Contact No.: ${car.customerPhone}`, 10, 90);
-
+      doc.text("Customer Name:", 10, 60);
+      doc.text(car.customerName, 60, 60);
+      doc.text(`Vehicle Number:`, 10, 70);
+      doc.text(car.vehicleNumber, 60, 70);
+      doc.text(`KM:`, 10, 80);
+      doc.text(car.km, 60, 80);
+      doc.text(`Contact No.:`, 10, 90);
+      doc.text(car.customerPhone, 60, 90);
+      doc.setFontSize(18);
+      doc.setTextColor("blue");
       doc.text(`${car.invoiceNumber}`, 140, 60);
+      doc.setTextColor("black");
+      doc.setFontSize(12);
       doc.text(`${car.date}`, 140, 70);
       doc.setFont("helvetica", "normal");
 
@@ -144,27 +151,47 @@ const CarList = () => {
         (total, issue) => total + parseFloat(issue.amount),
         0
       );
-      doc.text(
-        `Total Amount: ${totalAmount}`,
-        10,
-        doc.autoTable.previous.finalY + 10
-      );
+      const balance = totalAmount - car.purchaseAmount;
+      const summaryRows = [
+        ["", "", "Total", `Rs ${totalAmount}`],
+        ["", "", "Purchase Amount", `Rs ${car.purchaseAmount}`],
+        ["", "", "Balance", `Rs ${balance}`],
+      ];
+
+      doc.autoTable({
+        body: summaryRows,
+        startY: doc.autoTable.previous.finalY + 10,
+        theme: "plain",
+        styles: { fontSize: 12, fontStyle: "bold" },
+        columnStyles: {
+          0: { cellWidth: 50 },
+          1: { cellWidth: 50 },
+          2: { cellWidth: 30, halign: "right" },
+          3: { cellWidth: 50, halign: "right" },
+        },
+        didDrawCell: (data) => {
+          if (data.section === "body" && data.column.index === 2) {
+            doc.setFont("normal");
+          }
+        },
+      });
+      return doc.autoTable.previous.finalY; 
     };
 
-    const addSignature = () => {
+    const addSignature = (startY) => {
       const signature = new Image();
       signature.src = signatureImage;
-      doc.addImage(signature, "JPEG", 145, 200, 50, 20);
+      doc.addImage(signature, "JPEG", 145, startY + 10, 50, 20);
       doc.setFontSize(12);
-      doc.text("A.Abeeskar", 155, 230);
+      doc.text("A.Abeeskar", 155, startY + 40);
       doc.setFont("helvetica", "bold");
-      doc.text("Signature", 155, 235);
+      doc.text("Signature", 155, startY + 45);
       doc.setFont("helvetica", "normal");
     };
 
     header();
-    content();
-    addSignature();
+    const finalY = content();
+    addSignature(finalY);
 
     doc.save(`${car.customerName}_${car.invoiceNumber}_invoice.pdf`);
   };
