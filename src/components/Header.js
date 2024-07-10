@@ -26,20 +26,20 @@ const Header = () => {
           </Typography>
         </Box>
       </Box>
-      <Box>
+      {/* <Box>
         <Grid container spacing={2}>
           <Grid item>
-            <Link component={RouterLink} to="/add-car" underline="none">
-              Add Vehicle
+            <Link component={RouterLink} to="/" underline="none">
+              Vehicles
             </Link>
           </Grid>
           <Grid item>
-            <Link component={RouterLink} to="/" underline="none">
-              Vehicle List
+            <Link component={RouterLink} to="/view-estimate" underline="none">
+              Estimates
             </Link>
           </Grid>
         </Grid>
-      </Box>
+      </Box> */}
     </Box>
   );
 };

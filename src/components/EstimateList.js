@@ -13,6 +13,7 @@ import {
   Grid,
   TablePagination,
   InputAdornment,
+  Typography,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
@@ -21,79 +22,59 @@ import firebase from "../firebase";
 import { useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
-import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import logoImage from "../assets/logo.jpg";
 import signatureImage from "../assets/logo.jpg";
 import ConfirmationDialog from "./DialogBox";
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
-const CarList = () => {
-  const [cars, setCars] = useState([]);
-  const [filteredCars, setFilteredCars] = useState([]);
+const EstimateList = () => {
+  const [estimates, setEstimates] = useState([]);
+  const [filteredEstimates, setFilteredEstimates] = useState([]);
   const [filter, setFilter] = useState("");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [carToDelete, setCarToDelete] = useState(null);
+  const [estimateToDelete, setEstimateToDelete] = useState(null);
   const navigate = useNavigate();
 
-  const fetchCars = () => {
-    const carsRef = firebase.database().ref("cars");
-    carsRef.on("value", (snapshot) => {
-      const cars = snapshot.val();
-      const carList = [];
-      for (let id in cars) {
-        carList.unshift({ key: id, ...cars[id] });
+  const fetchEstimates = () => {
+    const estimatesRef = firebase.database().ref("estimates");
+    estimatesRef.on("value", (snapshot) => {
+      const estimates = snapshot.val();
+      const estimateList = [];
+      for (let id in estimates) {
+        estimateList.unshift({ key: id, ...estimates[id] });
       }
-      setCars(carList);
-      setFilteredCars(carList);
-
-      // Check for bills with balance due after 14 days
-      const reminders = carList.reduce((acc, car) => {
-        const daysDifference = calculateDaysDifference(car.date);
-        if (car.balance > 0 && daysDifference > 14) {
-          acc.push(car.invoiceNumber);
-        }
-        return acc;
-      }, []);
-
-      if (reminders.length > 0) {
-        const reminderMessage = `You Need To Buy Balance Bill ${reminders.join(
-          ", "
-        )}`;
-        toast.warning(reminderMessage, {
-          autoClose: 5000,
-          style: { textAlign: "center" },
-          position: "top-center",
-        });
-      }
+      setEstimates(estimateList);
+      setFilteredEstimates(estimateList);
     });
   };
 
   useEffect(() => {
-    fetchCars();
+    fetchEstimates();
 
     return () => {
-      const carsRef = firebase.database().ref("cars");
-      carsRef.off();
+      const estimatesRef = firebase.database().ref("estimates");
+      estimatesRef.off();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleDelete = (id) => {
-    const carRef = firebase.database().ref("cars").child(id);
-    carRef.remove().then(() => {
-      fetchCars();
+    const estimateRef = firebase.database().ref("estimates").child(id);
+    estimateRef.remove().then(() => {
+      fetchEstimates();
     });
   };
 
   const handleEdit = (id) => {
-    navigate(`/edit-car/${id}`);
+    navigate(`/edit-estimate/${id}`);
   };
 
-  const handlePrint = (car) => {
+  const handlePrint = (estimate) => {
     const doc = new jsPDF();
 
     const addLogo = () => {
@@ -118,16 +99,16 @@ const CarList = () => {
     const content = () => {
       doc.setFontSize(12);
       doc.setFont("helvetica", "bold");
-      doc.text(`Customer Name: ${car.customerName}`, 10, 60);
-      doc.text(`Vehicle Number: ${car.vehicleNumber}`, 10, 70);
-      doc.text(`KM: ${car.km}`, 10, 80);
-      doc.text(`Contact No.: ${car.customerPhone}`, 10, 90);
+      doc.text(`Customer Name: ${estimate.customerName}`, 10, 60);
+      doc.text(`Vehicle Number: ${estimate.vehicleNumber}`, 10, 70);
+      doc.text(`KM: ${estimate.km}`, 10, 80);
+      doc.text(`Contact No.: ${estimate.customerPhone}`, 10, 90);
 
-      doc.text(`${car.invoiceNumber}`, 140, 60);
-      doc.text(`${car.date}`, 140, 70);
+      doc.text(`${estimate.estimateNumber}`, 140, 60);
+      doc.text(`${estimate.date}`, 140, 70);
       doc.setFont("helvetica", "normal");
 
-      const issueRows = car.issues.map((issue, index) => [
+      const issueRows = estimate.issues.map((issue, index) => [
         index + 1,
         issue.description,
         issue.qty,
@@ -140,7 +121,7 @@ const CarList = () => {
         startY: 100,
       });
 
-      const totalAmount = car.issues.reduce(
+      const totalAmount = estimate.issues.reduce(
         (total, issue) => total + parseFloat(issue.amount),
         0
       );
@@ -166,19 +147,19 @@ const CarList = () => {
     content();
     addSignature();
 
-    doc.save(`${car.customerName}_${car.invoiceNumber}_invoice.pdf`);
+    doc.save(`${estimate.customerName}_${estimate.estimateNumber}_invoice.pdf`);
   };
 
   const handleFilterChange = (e) => {
     const { value } = e.target;
     setFilter(value);
-    const filtered = cars.filter(
-      (car) =>
-        car.customerName.toLowerCase().includes(value.toLowerCase()) ||
-        car.vehicleNumber.toLowerCase().includes(value.toLowerCase()) ||
-        car.invoiceNumber.toLowerCase().includes(value.toLowerCase())
+    const filtered = estimates.filter(
+      (estimate) =>
+        estimate.customerName.toLowerCase().includes(value.toLowerCase()) ||
+        estimate.vehicleNumber.toLowerCase().includes(value.toLowerCase()) ||
+        estimate.estimateNumber.toLowerCase().includes(value.toLowerCase())
     );
-    setFilteredCars(filtered);
+    setFilteredEstimates(filtered);
   };
 
   const handleChangePage = (event, newPage) => {
@@ -190,27 +171,21 @@ const CarList = () => {
     setPage(0);
   };
 
-  const calculateDaysDifference = (date) => {
-    const currentDate = new Date();
-    const carDate = new Date(date);
-    const differenceInTime = currentDate.getTime() - carDate.getTime();
-    const differenceInDays = differenceInTime / (1000 * 3600 * 24);
-    return differenceInDays;
-  };
-
   const openDeleteDialog = (id) => {
-    setCarToDelete(id);
+    setEstimateToDelete(id);
     setDeleteDialogOpen(true);
   };
 
   const closeDeleteDialog = () => {
     setDeleteDialogOpen(false);
-    setCarToDelete(null);
+    setEstimateToDelete(null);
   };
 
   return (
     <Container>
-      <ToastContainer />
+      <Typography marginTop={2} variant="h4" align="center" gutterBottom>
+        Estimate Details
+      </Typography>
       <Grid
         container
         spacing={2}
@@ -237,19 +212,20 @@ const CarList = () => {
           <Button
             variant="contained"
             color="primary"
-            onClick={() => navigate("/add-car")}
-            startIcon={<AddIcon />}
+            onClick={() => navigate("/")}
+            startIcon={<ArrowBackIcon />}
           >
-            Invoice
+            Back
           </Button>
         </Grid>
         <Grid item>
           <Button
             variant="contained"
             color="primary"
-            onClick={() => navigate("/view-estimate")}
+            onClick={() => navigate("/add-estimate")}
+            startIcon={<AddIcon />}
           >
-            Estimates
+            Estimate
           </Button>
         </Grid>
       </Grid>
@@ -257,49 +233,48 @@ const CarList = () => {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Invoice No.</TableCell>
+              <TableCell>Estimate No.</TableCell>
               <TableCell>Customer Name</TableCell>
               <TableCell>Contact No.</TableCell>
               <TableCell>Date</TableCell>
               <TableCell>Vehicle No.</TableCell>
               <TableCell>Total</TableCell>
-              <TableCell>Balance</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredCars
+            {filteredEstimates
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((car) => {
-                const totalAmount = car.issues.reduce(
+              .map((estimate) => {
+                const totalAmount = estimate.issues.reduce(
                   (total, issue) => total + parseFloat(issue.amount),
                   0
                 );
                 return (
-                  <TableRow key={car.key}>
-                    <TableCell>{car.invoiceNumber}</TableCell>
-                    <TableCell>{car.customerName}</TableCell>
-                    <TableCell>{car.customerPhone}</TableCell>
-                    <TableCell>{car.date}</TableCell>
-                    <TableCell>{car.vehicleNumber}</TableCell>
+                  <TableRow key={estimate.key}>
+                    {console.log(estimate)}
+                    <TableCell>{estimate.estimateNumber}</TableCell>
+                    <TableCell>{estimate.customerName}</TableCell>
+                    <TableCell>{estimate.customerPhone}</TableCell>
+                    <TableCell>{estimate.date}</TableCell>
+                    <TableCell>{estimate.vehicleNumber}</TableCell>
                     <TableCell>{totalAmount}</TableCell>
-                    <TableCell>{car.balance}</TableCell>
                     <TableCell>
                       <IconButton
                         style={{ color: "blue" }}
-                        onClick={() => handleEdit(car.key)}
+                        onClick={() => handleEdit(estimate.key)}
                       >
                         <EditIcon />
                       </IconButton>
                       <IconButton
                         style={{ color: "red" }}
-                        onClick={() => openDeleteDialog(car.key)}
+                        onClick={() => openDeleteDialog(estimate.key)}
                       >
                         <DeleteIcon />
                       </IconButton>
                       <IconButton
                         style={{ color: "green" }}
-                        onClick={() => handlePrint(car)}
+                        onClick={() => handlePrint(estimate)}
                       >
                         <PrintIcon />
                       </IconButton>
@@ -313,7 +288,7 @@ const CarList = () => {
       <TablePagination
         rowsPerPageOptions={[10, 25, 50]}
         component="div"
-        count={filteredCars.length}
+        count={filteredEstimates.length}
         rowsPerPage={rowsPerPage}
         page={page}
         onPageChange={handleChangePage}
@@ -323,10 +298,10 @@ const CarList = () => {
         open={deleteDialogOpen}
         onClose={closeDeleteDialog}
         onConfirm={handleDelete}
-        carId={carToDelete}
+        carId={estimateToDelete}
       />
     </Container>
   );
 };
 
-export default CarList;
+export default EstimateList;

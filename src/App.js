@@ -5,6 +5,8 @@ import "./App.css";
 import Header from "./components/Header"; 
 import Footer from "./components/Footer";
 import { Container } from "@mui/material";
+import EstimateForm from "./components/AddEstimate";
+import EstimateList from './components/EstimateList'
 
 function App() {
   return (
@@ -15,6 +17,9 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/add-car" element={<CarForm />} />
           <Route path="/edit-car/:id" element={<CarForm />} />
+          <Route path="/view-estimate" element={<EstimateList />} />
+          <Route path="/add-estimate" element={<EstimateForm />} />
+          <Route path="/edit-estimate/:id" element={<EstimateForm />} />
         </Routes>
         <Footer />
       </Container>

@@ -1,12 +1,12 @@
-import React from 'react';
-import { Typography, Container } from '@mui/material';
-import CarList from '../components/CarList';
+import React from "react";
+import { Typography, Container } from "@mui/material";
+import CarList from "../components/CarList";
 
 const HomePage = () => {
   return (
     <Container>
       <Typography marginTop={2} variant="h4" align="center" gutterBottom>
-        Vehicle Details
+        Invoice Details
       </Typography>
       <CarList />
     </Container>

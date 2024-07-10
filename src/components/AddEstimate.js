@@ -12,17 +12,15 @@ import firebase from "../firebase";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 
-const CarForm = () => {
-  const [car, setCar] = useState({
+const EstimateForm = () => {
+  const [estimate, setEstimate] = useState({
     customerName: "",
     customerPhone: "",
     km: "",
     date: "",
     vehicleNumber: "",
-    invoiceNumber: "",
-    purchaseAmount: "",
+    estimateNumber: "",
     totalAmount: "",
-    balance: "",
     issues: [{ description: "", qty: "", rate: "", amount: "" }],
   });
   const navigate = useNavigate();
@@ -30,44 +28,41 @@ const CarForm = () => {
 
   useEffect(() => {
     if (id) {
-      const carRef = firebase.database().ref("cars").child(id);
-      carRef.on("value", (snapshot) => {
-        const carData = snapshot.val();
-        setCar(carData);
+      const estimateRef = firebase.database().ref("estimates").child(id);
+      estimateRef.on("value", (snapshot) => {
+        const estimateData = snapshot.val();
+        setEstimate(estimateData);
       });
 
       return () => {
-        carRef.off();
+        estimateRef.off();
       };
     } else {
-      const carsRef = firebase.database().ref("cars");
-      carsRef.once("value", (snapshot) => {
-        const cars = snapshot.val();
-        const newInvoiceNumber = `SM${Object.keys(cars || {}).length + 1}`;
-        setCar((prevCar) => ({ ...prevCar, invoiceNumber: newInvoiceNumber }));
+      const estimatesRef = firebase.database().ref("estimates");
+      estimatesRef.once("value", (snapshot) => {
+        const estimates = snapshot.val();
+        const newEstimateNumber = `SM-EM${
+          Object.keys(estimates || {}).length + 1
+        }`;
+        setEstimate((prevEstimate) => ({
+          ...prevEstimate,
+          estimateNumber: newEstimateNumber,
+        }));
       });
     }
   }, [id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setCar((prevCar) => {
-      const updatedCar = { ...prevCar, [name]: value };
-
-      if (name === "purchaseAmount") {
-        updatedCar.balance = calculateBalance(
-          updatedCar.totalAmount,
-          parseFloat(value)
-        );
-      }
-
-      return updatedCar;
+    setEstimate((prevEstimate) => {
+      const updatedEstimate = { ...prevEstimate, [name]: value };
+      return updatedEstimate;
     });
   };
 
   const handleIssueChange = (index, e) => {
     const { name, value } = e.target;
-    const updatedIssues = car.issues.map((issue, i) =>
+    const updatedIssues = estimate.issues.map((issue, i) =>
       i === index
         ? {
             ...issue,
@@ -82,75 +77,63 @@ const CarForm = () => {
         : issue
     );
 
-    setCar((prevCar) => {
+    setEstimate((prevEstimate) => {
       const totalAmount = updatedIssues.reduce(
         (total, issue) => total + parseFloat(issue.amount || 0),
         0
       );
-      const updatedCar = {
-        ...prevCar,
+      const updatedEstimate = {
+        ...prevEstimate,
         issues: updatedIssues,
         totalAmount: totalAmount,
-        balance: calculateBalance(
-          totalAmount,
-          parseFloat(prevCar.purchaseAmount)
-        ),
       };
 
-      return updatedCar;
+      return updatedEstimate;
     });
   };
 
   const handleAddIssue = () => {
-    setCar((prevCar) => ({
-      ...prevCar,
+    setEstimate((prevEstimate) => ({
+      ...prevEstimate,
       issues: [
-        ...prevCar.issues,
+        ...prevEstimate.issues,
         { description: "", qty: "", rate: "", amount: "" },
       ],
     }));
   };
 
   const handleRemoveIssue = (index) => {
-    const updatedIssues = car.issues.filter((_, i) => i !== index);
-    setCar((prevCar) => {
+    const updatedIssues = estimate.issues.filter((_, i) => i !== index);
+    setEstimate((prevEstimate) => {
       const totalAmount = updatedIssues.reduce(
         (total, issue) => total + parseFloat(issue.amount || 0),
         0
       );
-      const updatedCar = {
-        ...prevCar,
+      const updatedEstimate = {
+        ...prevEstimate,
         issues: updatedIssues,
         totalAmount: totalAmount,
-        balance: calculateBalance(
-          totalAmount,
-          parseFloat(prevCar.purchaseAmount)
-        ),
       };
 
-      return updatedCar;
+      return updatedEstimate;
     });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const carsRef = firebase.database().ref("cars");
+    const estimatesRef = firebase.database().ref("estimates");
     if (id) {
-      carsRef
+      estimatesRef
         .child(id)
-        .set(car)
-        .then(() => navigate("/"));
+        .set(estimate)
+        .then(() => navigate("/view-estimate"));
     } else {
-      carsRef.push(car).then(() => navigate("/"));
+      estimatesRef.push(estimate).then(() => navigate("/view-estimate"));
     }
   };
 
   const handleCancel = () => {
-    navigate("/");
-  };
-
-  const calculateBalance = (totalAmount, purchaseAmount) => {
-    return totalAmount - (purchaseAmount || 0);
+    navigate("/view-estimate");
   };
 
   return (
@@ -159,7 +142,7 @@ const CarForm = () => {
         <Grid container spacing={2}>
           <Grid item xs={12} marginTop={2}>
             <Typography variant="h4" align="center">
-              {id ? "Update Invoice Details" : "Add Invoice Details"}
+              {id ? "Update Estimate Details" : "Add Estimate Details"}
             </Typography>
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -167,7 +150,7 @@ const CarForm = () => {
               label="Customer Name"
               name="customerName"
               required
-              value={car.customerName}
+              value={estimate.customerName}
               onChange={handleChange}
               fullWidth
               margin="normal"
@@ -178,7 +161,7 @@ const CarForm = () => {
               label="Customer Phone"
               name="customerPhone"
               required
-              value={car.customerPhone}
+              value={estimate.customerPhone}
               onChange={handleChange}
               fullWidth
               margin="normal"
@@ -188,7 +171,7 @@ const CarForm = () => {
             <TextField
               label="KM"
               name="km"
-              value={car.km}
+              value={estimate.km}
               required
               type="number"
               onChange={handleChange}
@@ -202,7 +185,7 @@ const CarForm = () => {
               name="date"
               type="date"
               required
-              value={car.date}
+              value={estimate.date}
               onChange={handleChange}
               fullWidth
               margin="normal"
@@ -216,7 +199,7 @@ const CarForm = () => {
               label="Vehicle Number"
               name="vehicleNumber"
               required
-              value={car.vehicleNumber}
+              value={estimate.vehicleNumber}
               onChange={handleChange}
               fullWidth
               margin="normal"
@@ -224,9 +207,9 @@ const CarForm = () => {
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField
-              label="Invoice Number"
-              name="invoiceNumber"
-              value={car.invoiceNumber}
+              label="Estimate Number"
+              name="estimateNumber"
+              value={estimate.estimateNumber}
               onChange={handleChange}
               fullWidth
               margin="normal"
@@ -237,7 +220,7 @@ const CarForm = () => {
           </Grid>
         </Grid>
         <Grid container spacing={2} display={"flex"}>
-          {car.issues.map((issue, index) => (
+          {estimate.issues.map((issue, index) => (
             <React.Fragment key={index}>
               <Grid item xs={12} sm={4}>
                 <TextField
@@ -313,32 +296,7 @@ const CarForm = () => {
               label="Total Amount"
               name="totalAmount"
               type="number"
-              value={car.totalAmount}
-              InputProps={{
-                readOnly: true,
-              }}
-              fullWidth
-              margin="normal"
-            />
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <TextField
-              label="Purchase Amount"
-              name="purchaseAmount"
-              type="number"
-              required
-              value={car.purchaseAmount}
-              onChange={handleChange}
-              fullWidth
-              margin="normal"
-            />
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <TextField
-              label="Balance"
-              name="balance"
-              type="number"
-              value={car.balance}
+              value={estimate.totalAmount}
               InputProps={{
                 readOnly: true,
               }}
@@ -348,17 +306,17 @@ const CarForm = () => {
           </Grid>
         </Grid>
         <Grid
-          container
+        container
           item
           xs={12}
-          marginTop={3}
+          marginTop={2}
           marginBottom={3}
           justifyContent="right"
           spacing={2}
         >
           <Grid item>
             <Button type="submit" variant="contained" color="primary">
-              {id ? "Update Invoice" : "Add Invoice"}
+              {id ? "Update Estimate" : "Add Estimate"}
             </Button>
           </Grid>
           <Grid item>
@@ -372,4 +330,4 @@ const CarForm = () => {
   );
 };
 
-export default CarForm;
+export default EstimateForm;
