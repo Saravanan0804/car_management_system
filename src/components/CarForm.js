@@ -11,6 +11,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import firebase from "../firebase";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
+import Header from "../components/Header"; 
+import Footer from "../components/Footer";
 
 const CarForm = () => {
   const [car, setCar] = useState({
@@ -141,12 +143,12 @@ const CarForm = () => {
         .set(car)
         .then(() => navigate("/"));
     } else {
-      carsRef.push(car).then(() => navigate("/"));
+      carsRef.push(car).then(() => navigate("/view-vehicle"));
     }
   };
 
   const handleCancel = () => {
-    navigate("/");
+    navigate("/view-vehicle");
   };
 
   const calculateBalance = (totalAmount, purchaseAmount) => {
@@ -155,6 +157,7 @@ const CarForm = () => {
 
   return (
     <Container>
+      <Header />
       <form onSubmit={handleSubmit}>
         <Grid container spacing={2}>
           <Grid item xs={12} marginTop={2}>
@@ -368,6 +371,7 @@ const CarForm = () => {
           </Grid>
         </Grid>
       </form>
+      <Footer />
     </Container>
   );
 };

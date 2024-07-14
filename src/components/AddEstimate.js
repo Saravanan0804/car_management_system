@@ -11,6 +11,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import firebase from "../firebase";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
+import Header from "../components/Header"; 
+import Footer from "../components/Footer";
 
 const EstimateForm = () => {
   const [estimate, setEstimate] = useState({
@@ -138,6 +140,7 @@ const EstimateForm = () => {
 
   return (
     <Container>
+      <Header />
       <form onSubmit={handleSubmit}>
         <Grid container spacing={2}>
           <Grid item xs={12} marginTop={2}>
@@ -326,6 +329,7 @@ const EstimateForm = () => {
           </Grid>
         </Grid>
       </form>
+      <Footer />
     </Container>
   );
 };

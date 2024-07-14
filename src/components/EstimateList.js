@@ -29,6 +29,8 @@ import ConfirmationDialog from "./DialogBox";
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import Header from "../components/Header"; 
+import Footer from "../components/Footer";
 
 const EstimateList = () => {
   const [estimates, setEstimates] = useState([]);
@@ -183,6 +185,7 @@ const EstimateList = () => {
 
   return (
     <Container>
+      <Header />
       <Typography marginTop={2} variant="h4" align="center" gutterBottom>
         Estimate Details
       </Typography>
@@ -212,7 +215,7 @@ const EstimateList = () => {
           <Button
             variant="contained"
             color="primary"
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/view-vehicle")}
             startIcon={<ArrowBackIcon />}
           >
             Back
@@ -300,6 +303,7 @@ const EstimateList = () => {
         onConfirm={handleDelete}
         carId={estimateToDelete}
       />
+      <Footer />
     </Container>
   );
 };

@@ -13,6 +13,7 @@ import {
   Grid,
   TablePagination,
   InputAdornment,
+  Typography
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
@@ -28,6 +29,8 @@ import signatureImage from "../assets/sign.jpg";
 import ConfirmationDialog from "./DialogBox";
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
+import Header from "../components/Header"; 
+import Footer from "../components/Footer";
 
 const CarList = () => {
   const [cars, setCars] = useState([]);
@@ -238,6 +241,10 @@ const CarList = () => {
   return (
     <Container>
       <ToastContainer />
+      <Header />
+      <Typography marginTop={2} variant="h4" align="center" gutterBottom>
+        Invoice Details
+      </Typography>
       <Grid
         container
         spacing={2}
@@ -352,6 +359,7 @@ const CarList = () => {
         onConfirm={handleDelete}
         carId={carToDelete}
       />
+      <Footer />
     </Container>
   );
 };
