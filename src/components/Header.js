@@ -1,6 +1,6 @@
 import React from "react";
 import { Box, Typography } from "@mui/material";
-import logo from "../assets/logo.jpg";
+import logo from "../assets/logo.png";
 // import { Link as RouterLink } from "react-router-dom";
 
 const Header = () => {

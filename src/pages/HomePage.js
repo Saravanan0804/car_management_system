@@ -2,7 +2,7 @@ import React from "react";
 import { Typography, Container, Box, Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import backgroundImage from "../../src/assets/bg2.jpg";
-import logo from "../assets/logo.jpg";
+import logo from "../assets/logo.png";
 
 const HomePage = () => {
   const history = useNavigate();
@@ -38,7 +38,7 @@ const HomePage = () => {
           <img
             src={logo}
             alt="Subasthika Motors"
-            style={{ width: 150, height: "auto", marginBottom: 16 }}
+            style={{ width: 200, height: "auto", marginBottom: 16 }}
           />
         </Box>
         <Typography

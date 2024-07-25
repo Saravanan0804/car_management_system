@@ -24,7 +24,7 @@ import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import logoImage from "../assets/logo.jpg";
+import logoImage from "../assets/logo.png";
 import signatureImage from "../assets/sign.jpg";
 import ConfirmationDialog from "./DialogBox";
 import AddIcon from "@mui/icons-material/Add";
@@ -102,19 +102,19 @@ const CarList = () => {
     const addLogo = () => {
       const logo = new Image();
       logo.src = logoImage;
-      doc.addImage(logo, "JPEG", 10, 10, 50, 30);
+      doc.addImage(logo, "PNG", 10, 10, 30, 30);
     };
 
     const header = () => {
       addLogo();
       doc.setFontSize(18);
       doc.setFont("helvetica", "bold");
-      doc.text("Subasthika Motors", 70, 16);
+      doc.text("Subasthika Motors", 50, 16);
       doc.setFont("helvetica", "normal");
       doc.setFontSize(12);
-      doc.text("Mudamavadi Junction Nallur, Jaffna", 70, 24);
-      doc.text("Contact: 0777111872 & 0766166601", 70, 32);
-      doc.text("Gmail: abeesthurai97@gmail.com", 70, 40);
+      doc.text("Mudamavadi Junction Nallur, Jaffna", 50, 24);
+      doc.text("Contact: 0777111872 & 0766166601", 50, 32);
+      doc.text("Gmail: abeesthurai97@gmail.com", 50, 40);
       doc.line(10, 50, 200, 50);
     };
 

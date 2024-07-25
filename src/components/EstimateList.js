@@ -23,8 +23,8 @@ import { useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import "react-toastify/dist/ReactToastify.css";
-import logoImage from "../assets/logo.jpg";
-import signatureImage from "../assets/logo.jpg";
+import logoImage from "../assets/logo.png";
+import signatureImage from "../assets/sign.jpg";
 import ConfirmationDialog from "./DialogBox";
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
@@ -82,31 +82,38 @@ const EstimateList = () => {
     const addLogo = () => {
       const logo = new Image();
       logo.src = logoImage;
-      doc.addImage(logo, "JPEG", 10, 10, 50, 30);
+      doc.addImage(logo, "PNG", 10, 10, 30, 30);
     };
 
     const header = () => {
       addLogo();
       doc.setFontSize(18);
       doc.setFont("helvetica", "bold");
-      doc.text("Subasthika Motors", 70, 16);
+      doc.text("Subasthika Motors", 50, 16);
       doc.setFont("helvetica", "normal");
       doc.setFontSize(12);
-      doc.text("Mudamavadi Junction Nallur, Jaffna", 70, 24);
-      doc.text("Contact: 0777111872 & 0766166601", 70, 32);
-      doc.text("Gmail: abeesthurai97@gmail.com", 70, 40);
+      doc.text("Mudamavadi Junction Nallur, Jaffna", 50, 24);
+      doc.text("Contact: 0777111872 & 0766166601", 50, 32);
+      doc.text("Gmail: abeesthurai97@gmail.com", 50, 40);
       doc.line(10, 50, 200, 50);
     };
 
     const content = () => {
       doc.setFontSize(12);
       doc.setFont("helvetica", "bold");
-      doc.text(`Customer Name: ${estimate.customerName}`, 10, 60);
-      doc.text(`Vehicle Number: ${estimate.vehicleNumber}`, 10, 70);
-      doc.text(`KM: ${estimate.km}`, 10, 80);
-      doc.text(`Contact No.: ${estimate.customerPhone}`, 10, 90);
-
+      doc.text("Customer Name:", 10, 60);
+      doc.text(estimate.customerName, 60, 60);
+      doc.text(`Vehicle Number:`, 10, 70);
+      doc.text(estimate.vehicleNumber, 60, 70);
+      doc.text(`KM:`, 10, 80);
+      doc.text(estimate.km, 60, 80);
+      doc.text(`Contact No.:`, 10, 90);
+      doc.text(estimate.customerPhone, 60, 90);
+      doc.setFontSize(18);
+      doc.setTextColor("blue");
       doc.text(`${estimate.estimateNumber}`, 140, 60);
+      doc.setTextColor("black");
+      doc.setFontSize(12);
       doc.text(`${estimate.date}`, 140, 70);
       doc.setFont("helvetica", "normal");
 
@@ -127,27 +134,44 @@ const EstimateList = () => {
         (total, issue) => total + parseFloat(issue.amount),
         0
       );
-      doc.text(
-        `Total Amount: ${totalAmount}`,
-        10,
-        doc.autoTable.previous.finalY + 10
-      );
+      const summaryRows = [
+        ["", "", "Total", `Rs ${totalAmount}`],
+      ];
+
+      doc.autoTable({
+        body: summaryRows,
+        startY: doc.autoTable.previous.finalY + 10,
+        theme: "plain",
+        styles: { fontSize: 12, fontStyle: "bold" },
+        columnStyles: {
+          0: { cellWidth: 50 },
+          1: { cellWidth: 50 },
+          2: { cellWidth: 30, halign: "right" },
+          3: { cellWidth: 50, halign: "right" },
+        },
+        didDrawCell: (data) => {
+          if (data.section === "body" && data.column.index === 2) {
+            doc.setFont("normal");
+          }
+        },
+      });
+      return doc.autoTable.previous.finalY; 
     };
 
-    const addSignature = () => {
+    const addSignature = (startY) => {
       const signature = new Image();
       signature.src = signatureImage;
-      doc.addImage(signature, "JPEG", 145, 200, 50, 20);
+      doc.addImage(signature, "JPEG", 145, startY + 10, 50, 20);
       doc.setFontSize(12);
-      doc.text("A.Abeeskar", 155, 230);
+      doc.text("A.Abeeskar", 155, startY + 40);
       doc.setFont("helvetica", "bold");
-      doc.text("Signature", 155, 235);
+      doc.text("Signature", 155, startY + 45);
       doc.setFont("helvetica", "normal");
     };
 
     header();
-    content();
-    addSignature();
+    const finalY = content();
+    addSignature(finalY);
 
     doc.save(`${estimate.customerName}_${estimate.estimateNumber}_invoice.pdf`);
   };
