@@ -23,7 +23,7 @@ import { useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import "react-toastify/dist/ReactToastify.css";
-import logoImage from "../assets/logo.png";
+import logoImage from "../assets/logo.jpg";
 import signatureImage from "../assets/sign.jpg";
 import ConfirmationDialog from "./DialogBox";
 import AddIcon from "@mui/icons-material/Add";

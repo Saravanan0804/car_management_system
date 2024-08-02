@@ -24,7 +24,7 @@ import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import logoImage from "../assets/logo.png";
+import logoImage from "../assets/logo.jpg";
 import signatureImage from "../assets/sign.jpg";
 import ConfirmationDialog from "./DialogBox";
 import AddIcon from "@mui/icons-material/Add";
@@ -98,13 +98,13 @@ const CarList = () => {
 
   const handlePrint = (car) => {
     const doc = new jsPDF();
-
+  
     const addLogo = () => {
       const logo = new Image();
       logo.src = logoImage;
       doc.addImage(logo, "PNG", 10, 10, 30, 30);
     };
-
+  
     const header = () => {
       addLogo();
       doc.setFontSize(18);
@@ -117,7 +117,7 @@ const CarList = () => {
       doc.text("Gmail: abeesthurai97@gmail.com", 50, 40);
       doc.line(10, 50, 200, 50);
     };
-
+  
     const content = () => {
       doc.setFontSize(12);
       doc.setFont("helvetica", "bold");
@@ -136,7 +136,7 @@ const CarList = () => {
       doc.setFontSize(12);
       doc.text(`${car.date}`, 140, 70);
       doc.setFont("helvetica", "normal");
-
+  
       const issueRows = car.issues.map((issue, index) => [
         index + 1,
         issue.description,
@@ -144,12 +144,22 @@ const CarList = () => {
         issue.rate,
         issue.amount,
       ]);
+  
       doc.autoTable({
         head: [["Sr No.", "Product", "Qty", "Rate", "Amount"]],
         body: issueRows,
         startY: 100,
+        margin: { top: 100 },
+        pageBreak: 'auto',
+        styles: { overflow: 'linebreak', fontSize: 12 },
+        columnStyles: { text: { cellWidth: 'auto' } },
+        didDrawPage: (data) => {
+          if (data.pageNumber > 1) {
+            header();
+          }
+        }
       });
-
+  
       const totalAmount = car.issues.reduce(
         (total, issue) => total + parseFloat(issue.amount),
         0
@@ -160,7 +170,7 @@ const CarList = () => {
         ["", "", "Purchase Amount", `Rs ${car.purchaseAmount}`],
         ["", "", "Balance", `Rs ${balance}`],
       ];
-
+  
       doc.autoTable({
         body: summaryRows,
         startY: doc.autoTable.previous.finalY + 10,
@@ -178,10 +188,15 @@ const CarList = () => {
           }
         },
       });
-      return doc.autoTable.previous.finalY; 
+  
+      return doc.autoTable.previous.finalY;
     };
-
+  
     const addSignature = (startY) => {
+      if (doc.internal.pageSize.getHeight() - startY < 40) {
+        doc.addPage();
+        startY = 20; // Start new page with sufficient top margin
+      }
       const signature = new Image();
       signature.src = signatureImage;
       doc.addImage(signature, "JPEG", 145, startY + 10, 50, 20);
@@ -191,14 +206,14 @@ const CarList = () => {
       doc.text("Signature", 155, startY + 45);
       doc.setFont("helvetica", "normal");
     };
-
+  
     header();
     const finalY = content();
     addSignature(finalY);
-
+  
     doc.save(`${car.customerName}_${car.invoiceNumber}_invoice.pdf`);
   };
-
+  
   const handleFilterChange = (e) => {
     const { value } = e.target;
     setFilter(value);
